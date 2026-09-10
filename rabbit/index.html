@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>谁是兔子 · 海龟汤推理馆</title>
+<link rel="stylesheet" href="style.css?v=2">
+</head>
+<body>
+
+<!-- 背景动效 -->
+<div class="bg-rain"></div>
+<div class="bg-vignette"></div>
+
+<!-- 顶部导航 -->
+<header class="navbar">
+  <div class="logo" onclick="showHome()">
+    <span class="logo-icon">🐰</span>
+    <span class="logo-text">谁是兔子</span>
+  </div>
+  <nav class="nav-links">
+    <span class="nav-link active" onclick="showHome()">谜题库</span>
+    <span class="nav-link" onclick="showProgress()">我的进度</span>
+    <span class="nav-link" onclick="showRules()">玩法说明</span>
+  </nav>
+  <div class="nav-stats">
+    <span class="stat-badge">🥕 <span id="carrotCount">0</span></span>
+    <span class="stat-badge">🏆 <span id="solvedCount">0</span>/<span id="totalCount">0</span></span>
+  </div>
+</header>
+
+<!-- 首页：故事列表 -->
+<main id="homePage" class="page active">
+  <section class="hero">
+    <div class="hero-content">
+      <h1 class="hero-title">
+        <span class="typed">在黑暗中，</span><br>
+        <span class="typed delay">找出那只<span class="accent">兔子</span>。</span>
+      </h1>
+      <p class="hero-sub">海龟汤 · 悬案推理 · 谁才是藏在故事里的兔子？</p>
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="all">全部</button>
+        <button class="filter-btn" data-filter="easy">简单</button>
+        <button class="filter-btn" data-filter="medium">中等</button>
+        <button class="filter-btn" data-filter="hard">困难</button>
+        <button class="filter-btn" data-filter="solved">已通关</button>
+      </div>
+    </div>
+    <div class="hero-rabbit">🐇</div>
+  </section>
+
+  <section class="story-grid" id="storyGrid"></section>
+</main>
+
+<!-- 游戏详情页 -->
+<main id="gamePage" class="page">
+  <button class="back-btn" onclick="showHome()">← 返回谜题库</button>
+  <div class="game-layout">
+    <!-- 左侧：谜面 -->
+    <div class="panel story-panel">
+      <div class="panel-header">
+        <span class="panel-tag" id="storyDifficulty"></span>
+        <span class="panel-title" id="storyTitle"></span>
+      </div>
+      <div class="story-face" id="storyFace"></div>
+      <div class="story-hint">
+        <span class="hint-icon">💡</span>
+        <span>通过提问缩小范围，找出"兔子"的身份与真相。</span>
+      </div>
+    </div>
+
+    <!-- 中间：对话与提问 -->
+    <div class="panel chat-panel">
+      <div class="panel-header">
+        <span class="panel-title">🔍 推理对话</span>
+        <span class="rounds" id="roundsLeft">剩余提问：<b id="roundsNum">20</b></span>
+      </div>
+      <div class="chat-box" id="chatBox">
+        <div class="chat-msg system">
+          欢迎来到推理现场。我是主持人，你只能得到三种回答：<span class="ans-yes">是</span> / <span class="ans-no">否</span> / <span class="ans-na">无关</span>。试着找出"兔子"是谁。
+        </div>
+      </div>
+
+      <!-- 预设问题 -->
+      <div class="preset-questions" id="presetQuestions"></div>
+
+      <!-- 自由提问 -->
+      <div class="ask-bar">
+        <input type="text" id="askInput" placeholder="自由提问（例：兔子是人类吗？）" maxlength="40">
+        <button onclick="askQuestion()">提问</button>
+      </div>
+
+      <div class="action-row">
+        <button class="btn-clue" onclick="buyClue()">🧩 用1根🥕换线索</button>
+        <button id="btn-reveal" class="btn-reveal" onclick="tryReveal()">🔓 查看真相</button>
+      </div>
+    </div>
+
+    <!-- 右侧：线索板 -->
+    <div class="panel clue-panel">
+      <div class="panel-header">
+        <span class="panel-title">📋 线索板</span>
+        <span class="clue-count"><span id="clueCount">0</span>/<span id="clueTotal">0</span></span>
+      </div>
+      <div class="clue-list" id="clueList">
+        <div class="clue-empty">尚未获得任何线索</div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-tip" id="progressTip">收集线索以解锁真相</div>
+    </div>
+  </div>
+</main>
+
+<!-- 真相弹窗 -->
+<div class="modal" id="revealModal">
+  <div class="modal-content reveal">
+    <div class="modal-rabbit">🎉</div>
+    <h2 class="modal-title" id="revealTitle">真相大白</h2>
+    <div class="modal-body" id="revealBody"></div>
+    <div class="modal-score" id="revealScore"></div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="closeReveal()">继续推理</button>
+      <button class="btn-secondary" onclick="closeReveal(); showHome();">返回列表</button>
+    </div>
+  </div>
+</div>
+
+<!-- 进度页 -->
+<main id="progressPage" class="page">
+  <div class="progress-container">
+    <h2 class="page-title">🏆 我的推理记录</h2>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num" id="pSolved">0</div><div class="stat-label">已通关谜题</div></div>
+      <div class="stat-card"><div class="stat-num" id="pCarrots">0</div><div class="stat-label">胡萝卜(推理币)</div></div>
+      <div class="stat-card"><div class="stat-num" id="pStars">0</div><div class="stat-label">累计星数</div></div>
+      <div class="stat-card"><div class="stat-num" id="pPerfect">0</div><div class="stat-label">完美通关</div></div>
+    </div>
+    <div class="progress-list" id="progressList"></div>
+  </div>
+</main>
+
+<!-- 玩法说明页 -->
+<main id="rulesPage" class="page">
+  <div class="rules-container">
+    <h2 class="page-title">📖 玩法说明</h2>
+    <div class="rules-content">
+      <div class="rule-card">
+        <h3>🐰 什么是"兔子"？</h3>
+        <p>每个故事里都藏着一个关键角色——它可能是凶手、卧底、意外的受益者，或者谜题本身的隐喻。我们称之为"兔子"。你的任务，就是找出它是谁。</p>
+      </div>
+      <div class="rule-card">
+        <h3>🎮 如何推理</h3>
+        <ul>
+          <li><b>阅读谜面</b>：仔细阅读"汤面"，注意反常细节。</li>
+          <li><b>提问</b>：点击预设问题或在输入框自由提问。</li>
+          <li><b>回答</b>：主持人只会回答 <span class="ans-yes">是</span> / <span class="ans-no">否</span> / <span class="ans-na">无关</span>。</li>
+          <li><b>收集线索</b>：关键提问会解锁线索，凑齐后可查看真相。</li>
+        </ul>
+      </div>
+      <div class="rule-card">
+        <h3>⭐ 评分规则</h3>
+        <p>剩余提问次数越多、用的线索越少，星数越高。最高 <b>★★★</b>。每通关一题获得 🥕 胡萝卜，可用于兑换线索。</p>
+      </div>
+      <div class="rule-card">
+        <h3>💡 小技巧</h3>
+        <p>海龟汤讲究"水平思考"——跳出常规因果。多问"是不是因为""有没有人""是否意外"等问题，逐步排除可能性。</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="stories.js?v=2"></script>
+<script src="script.js?v=2"></script>
+</body>
+</html>
